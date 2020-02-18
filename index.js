@@ -6,6 +6,7 @@ const cookieParser = require('cookie-parser')
 
 const { User } = require('./models/User')
 const { Note } = require('./models/Note')
+const { auth } = require('./middleware/auth')
 
 const config = require('./config/key')
 
@@ -64,6 +65,30 @@ app.post('/api/users/login', (req, res) => {
       })
     })
   })
+
+//auth route
+app.get('/api/users/auth', auth ,(req,res) => {
+  res.status(200).json({
+    _id: req.user._id,
+    isAdmin: req.user.role === 0 ? false : true,
+    isAuth: true,
+    name: req.user.name,
+    studentID: req.user.studentID,
+    userID: req.user.userID,
+    role: req.user.role,
+  })
+})
+
+app.get('/api/users/logout', auth, (req,res) => {
+  User.findOneAndUpdate({ _id: req.user._id},
+    {token: ""},
+    (err, user) => {
+      if(err) return res.json({ success: false, err})
+      return res.status(200).send({
+        success: true
+      })
+    })
+})
 
 //일지작성 route
 app.post('/api/note/write', (req,res) => {
